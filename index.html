@@ -1,111 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Suno Cover Generator</title>
+  <meta charset="utf-8">
+  <title>Upload Cover Suno</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f2ff;
-      padding: 20px;
-    }
-    .box {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      max-width: 500px;
-      margin: auto;
-    }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #7b4fff;
-      color: white;
-      border: none;
-      font-size: 18px;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-    pre {
-      background: #222;
-      color: #0f0;
-      padding: 15px;
-      border-radius: 12px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
+    body { font-family: Arial; padding: 20px; }
+    input, textarea { width: 100%; padding: 10px; margin-top: 10px; }
+    button { padding: 12px; width: 100%; margin-top: 15px; background: purple; color: white; font-size: 16px; border: none; border-radius: 8px; }
+    pre { background: #111; color: #0f0; padding: 10px; border-radius: 8px; margin-top: 20px; }
   </style>
 </head>
 <body>
 
-<div class="box">
-  <h2>Suno Cover Generator</h2>
+<h2>Upload Audio → Generate Cover</h2>
 
-  <label>API Key</label>
-  <input id="apiKey" placeholder="Masukkan API Key KIE AI anda" />
+<label>Audio dari Galeri</label>
+<input type="file" id="audioFile" accept="audio/*">
 
-  <label>Audio URL</label>
-  <input id="audioUrl" placeholder="https://example.com/audio.mp3" />
+<label>Title</label>
+<input id="title" placeholder="Judul">
 
-  <label>Title</label>
-  <input id="title" placeholder="Judul lagu" />
+<label>Style</label>
+<input id="style" placeholder="Misal: reggae, jazz, pop">
 
-  <label>Style</label>
-  <input id="style" placeholder="Misal: Pop, Jazz, HipHop, Reggae" />
+<label>Prompt</label>
+<textarea id="prompt" rows="4"></textarea>
 
-  <label>Prompt</label>
-  <textarea id="prompt" rows="4" placeholder="Isi prompt bebas..."></textarea>
+<button onclick="uploadAndGenerate()">Generate Cover</button>
 
-  <button onclick="generateCover()">Generate Cover</button>
-
-  <h3>Response:</h3>
-  <pre id="response">{}</pre>
-</div>
+<pre id="log"></pre>
 
 <script>
-async function generateCover() {
-  const apiKey = document.getElementById("apiKey").value;
-  const audioUrl = document.getElementById("audioUrl").value;
-  const title = document.getElementById("title").value;
-  const style = document.getElementById("style").value;
-  const prompt = document.getElementById("prompt").value;
+function log(data){
+  document.getElementById('log').innerText = 
+    typeof data === "string" ? data : JSON.stringify(data, null, 2);
+}
 
-  const body = {
-    model: "chirp-v5",
-    mode: "cover",
-    input_audio_url: audioUrl,
-    title: title,
-    tags: style,
-    prompt: prompt
-  };
+async function uploadAndGenerate() {
+  const file = document.getElementById('audioFile').files[0];
+  if (!file) return alert("Pilih file audio dulu!");
 
-  try {
-    const res = await fetch("https://api.kie.ai/v1/suno", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(body)
-    });
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("title", document.getElementById("title").value);
+  formData.append("style", document.getElementById("style").value);
+  formData.append("prompt", document.getElementById("prompt").value);
 
-    const data = await res.json();
-    document.getElementById("response").innerText = JSON.stringify(data, null, 2);
-  } catch (err) {
-    document.getElementById("response").innerText = err.toString();
-  }
+  log("Uploading...");
+
+  const res = await fetch("/api/upload-cover", {
+    method: "POST",
+    body: formData
+  });
+
+  const json = await res.json();
+  log(json);
 }
 </script>
 
 </body>
-  </html>
+</html>
